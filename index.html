@@ -18,6 +18,7 @@
     {
       "@context": "https://schema.org",
       "@type": "Person",
+      "@id": "https://seneka.me/#person",
       "name": "Seneka R Warren",
       "url": "https://seneka.me/",
       "image": "https://seneka.me/img/seneka.png",
@@ -47,10 +48,26 @@
         { "@type": "Occupation", "name": "Mentor" }
       ],
       "worksFor": [
-        { "@type": "Organization", "name": "Cliday", "url": "https://cliday.com/" },
-        { "@type": "Organization", "name": "Color Ad Group", "url": "https://color.ad/" },
-        { "@type": "Organization", "name": "Comindust", "url": "https://comindust.com/" },
-        { "@type": "Organization", "name": "TheDotBlog", "url": "https://thedotblog.com/" }
+        {
+          "@type": ["ProfessionalService", "Corporation"],
+          "@id": "https://comindust.com/#organization",
+          "name": "Comindust"
+        },
+        {
+          "@type": "NewsMediaOrganization",
+          "@id": "https://thedotblog.com/#organization",
+          "name": "TheDotBlog"
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://cliday.com/#organization",
+          "name": "Cliday"
+        },
+        {
+          "@type": "Organization",
+          "name": "Color Ad Group",
+          "url": "https://color.ad/"
+        }
       ],
       "knowsAbout": [
         "Software Development", "Business Strategy", "Venture Capital", "Mergers & Acquisitions", "Neuroscience", "Psychology", "Hypnosis", "Digital Marketing", "Illusionism", "Applied Nutrition", "Sales Engineering", "Game Theory", "Geopolitics", "Stoic Philosophy", "Complex Problem Solving"
