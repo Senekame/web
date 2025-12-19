@@ -142,6 +142,46 @@
         font-weight: 600;
     }
 
+    .weight-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background-color: var(--bg);
+        border: 1px solid var(--border-color);
+        color: var(--accent-dark);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 8px;
+        transition: all 0.2s ease;
+    }
+    
+    .weight-badge:hover {
+        border-color: var(--accent-dark);
+        background-color: #fff;
+    }
+
+    .notice-text {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--secondary-text);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        line-height: 1.6;
+        opacity: 0.9;
+    }
+    
+    .notice-text::before {
+        content: "NOTE:";
+        display: block;
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: var(--primary-text);
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+    }
+
     /* Matrix Styles adapted */
     .matrix-container {
         display: flex;
@@ -367,24 +407,29 @@
                 
                 <div class="svf-grid">
                     <div>
-                        <h3>X-axis = Inertia-adjusted velocity (IAV) A.K.A. Velocity</h3>
+                        <h3>X-axis = Inertia-adjusted velocity (IAV) | Velocity</h3>
                         <p><small>Objective: Measure the speed at which capital is transferred to high-growth areas in contrast to the costs of maintaining traditional operations.</small></p>
                         <ul>
-                            <li><strong>Relative Resource Agility (RRA) <span class="badge">0.34</span>:</strong> The degree of change in capital expenditure year-over-year (YoY) between different verticals or business units.</li>
-                            <li><strong>Innovation Yield Ratio (IYR) <span class="badge">0.27</span>:</strong> The proportion of revenue from new products or services (introduced in the last 36 months) relative to R&D expenditure.</li>
-                            <li><strong>Legacy burden (LB) <span class="badge">0.39</span>:</strong> The ratio of non-growth-related expenses to investments in expansion or innovation initiatives.</li>
+                            <li><strong>Relative Resource Agility (RRA) <span class="weight-badge">0.34</span>:</strong> The degree of change in capital expenditure year-over-year (YoY) between different verticals or business units.</li>
+                            <li><strong>Innovation Yield Ratio (IYR) <span class="weight-badge">0.27</span>:</strong> The proportion of revenue from new products or services (introduced in the last 36 months) relative to R&D expenditure.</li>
+                            <li><strong>Legacy burden (LB) <span class="weight-badge">0.39</span>:</strong> The ratio of non-growth-related expenses to investments in expansion or innovation initiatives.</li>
                         </ul>
                     </div>
                     <div>
-                        <h3>Y-axis = Dependency-weighted centrality (DWC) A.K.A. Power</h3>
+                        <h3>Y-axis = Dependency-weighted centrality (DWC) | Power</h3>
                         <p><small>Objective: To assess how critical the company is in its value chain and how difficult it is for others to replace it.</small></p>
                         <ul>
-                            <li><strong>Ecosystem stickiness index (ESI) <span class="badge">0.36</span>:</strong> An indicator of the sensitivity of customer loss to price adjustments in connected systems.</li>
-                            <li><strong>Node Criticality (NC) <span class="badge">0.24</span>:</strong> The portion of the sector's activities or processes that depend on the company's unique patents, interfaces, or configurations.</li>
-                            <li><strong>Substitution Friction (SubF) <span class="badge">0.40</span>:</strong> Defines the difficulty or obstacles, both practical and financial, that deter customers from leaving the brand and contracting other alternatives.</li>
+                            <li><strong>Ecosystem stickiness index (ESI) <span class="weight-badge">0.36</span>:</strong> An indicator of the sensitivity of customer loss to price adjustments in connected systems.</li>
+                            <li><strong>Node Criticality (NC) <span class="weight-badge">0.24</span>:</strong> The portion of the sector's activities or processes that depend on the company's unique patents, interfaces, or configurations.</li>
+                            <li><strong>Substitution Friction (SubF) <span class="weight-badge">0.40</span>:</strong> Defines the difficulty or obstacles, both practical and financial, that deter customers from leaving the brand and contracting other alternatives.</li>
                         </ul>
                     </div>
                 </div>
+                
+                <div class="notice-text">
+                    Standard weightings are applicable to most sectors. Specialized proprietary configurations are available to increase predictive accuracy.
+                </div>
+            </section>
             </section>
         </div>
 
