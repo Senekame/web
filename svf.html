@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>The Seneka Viability Framework (SVF) - Seneka R Warren</title>
+
+<meta name="description" content="The Seneka Viability Framework (SVF) is a prediction tool that evaluates a company's structural health by observing the relationship between resource allocation and market centrality.">
+
+<link rel="canonical" href="https://seneka.me/svf.html">
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="icon" href="img/favicon.png" type="image/png">
+
+<style>
+    /* Page-specific overrides for SVF */
+    .subtitle {
+        font-family: var(--font-mono);
+        color: var(--secondary-text);
+        font-size: 1.1rem;
+        max-width: 800px;
+        line-height: 1.6;
+    }
+
+    /* Content styling */
+    .content-card {
+        background-color: var(--surface-b);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        
+        /* Animation matches project-card */
+        opacity: 0;
+        animation: fadeIn linear forwards;
+        animation-timeline: view();
+        animation-range-start: entry 10%;
+        animation-range-end: cover 40%;
+    }
+
+    .content-card h2 {
+        text-align: left;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+        font-size: 1.4rem;
+    }
+    
+    .content-card h3 {
+        font-family: var(--font-mono);
+        color: var(--primary-text);
+        font-size: 1.1rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .content-card p {
+        color: var(--secondary-text);
+        margin-bottom: 1.2rem;
+    }
+
+    .content-card ul {
+        list-style-position: inside;
+        color: var(--secondary-text);
+        margin-bottom: 1.5rem;
+    }
+
+    .content-card li {
+        margin-bottom: 0.5rem;
+    }
+
+    .content-card strong {
+        color: var(--primary-text);
+    }
+
+    /* Formula Box */
+    .formula-box {
+        background: var(--bg);
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        text-align: center;
+        margin: 2rem 0;
+        font-family: var(--font-mono);
+        color: var(--primary-text);
+    }
+
+    /* Table Styles */
+    .svf-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 1.5rem 0;
+        font-size: 0.9rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .svf-table th {
+        background-color: var(--bg);
+        color: var(--secondary-text);
+        text-align: left;
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .svf-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: top;
+        color: var(--secondary-text);
+    }
+
+    .svf-table tr:last-child td { border-bottom: none; }
+    .svf-table tr:hover td { background-color: var(--bg); }
+
+    /* Grid for Dimensions */
+    .svf-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .svf-grid { grid-template-columns: 1fr; }
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: var(--bg);
+        border: 1px solid var(--border-color);
+        color: var(--primary-text);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Matrix Styles adapted */
+    .matrix-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 3rem 0;
+    }
+    
+    .matrix-y-axis {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 15px;
+    }
+    
+    .matrix-y-label {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-weight: bold;
+        color: var(--secondary-text);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+        font-family: var(--font-mono);
+        margin-bottom: 10px;
+    }
+    
+    .matrix-main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 650px;
+    }
+    
+    .matrix-grid-box {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 2px;
+        background-color: var(--border-color);
+        border: 2px solid var(--border-color);
+        width: 100%;
+        aspect-ratio: 1/1;
+        overflow: hidden;
+    }
+    
+    .matrix-quadrant {
+        background-color: var(--surface-b);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .matrix-quadrant:hover {
+        filter: brightness(0.98);
+    }
+    
+    .q-title {
+        font-weight: 600;
+        color: var(--primary-text);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-family: var(--font-mono);
+    }
+    
+    .q-sub {
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+        font-style: italic;
+    }
+    
+    .matrix-x-axis {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .matrix-x-label {
+        font-weight: bold;
+        color: var(--secondary-text);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+        font-family: var(--font-mono);
+        margin-top: 5px;
+    }
+    
+    .axis-indicators-x {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        font-size: 0.75rem;
+        color: var(--secondary-text);
+        font-weight: bold;
+        text-transform: uppercase;
+        font-family: var(--font-mono);
+    }
+    
+    .axis-indicators-y {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        font-size: 0.75rem;
+        color: var(--secondary-text);
+        font-weight: bold;
+        text-transform: uppercase;
+        padding: 10px 0;
+        font-family: var(--font-mono);
+    }
+    
+    /* Quadrant Colors - Keeping semantic meaning but softening */
+    .q-tl { background-color: #f8fafc; border-left: 4px solid #94a3b8; }
+    .q-tr { background-color: #ecfdf5; border-left: 4px solid #10b981; }
+    .q-bl { background-color: #fef2f2; border-left: 4px solid #ef4444; }
+    .q-br { background-color: #fff7ed; border-left: 4px solid #f97316; }
+
+    .animal-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .animal-name {
+        color: var(--primary-text);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+        font-family: var(--font-mono);
+    }
+    
+    .animal-desc {
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+        line-height: 1.4;
+        margin: 0;
+        text-align: center;
+    }
+    
+    .animal-desc em {
+        display: block;
+        margin-top: 5px;
+        color: var(--secondary-text);
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+        .matrix-container { flex-direction: column; }
+        .matrix-y-axis { 
+            flex-direction: row; 
+            width: 100%; 
+            margin-bottom: 10px; 
+            margin-right: 0;
+            justify-content: center;
+        }
+        .matrix-y-label {
+            writing-mode: horizontal-tb;
+            transform: none;
+            margin-bottom: 0;
+            margin-right: 10px;
+        }
+        .axis-indicators-y { display: none; }
+    }
+</style>
+</head>
+
+<body>
+    <div class="animated-background"></div>
+
+    <main class="container">
+        <header>
+            <a href="index.html" aria-label="Back to Home">
+                <img src="img/seneka.png" alt="Seneka R Warren - Personal Logo" class="logo">
+            </a>
+            <h1>The Seneka Viability Framework (SVF)</h1>
+            <div class="subtitle">A tool for evaluating a company's structure and predicting its continuity or extinction.</div>
+        </header>
+
+        <div class="content-card">
+            <section id="summary">
+                <h2>1. Summary</h2>
+                <p>
+                    The SVF is a prediction tool* that evaluates a company's structural health by observing the relationship between how it allocates resources internally and how essential it is in the external market.
+                </p>
+                <p>
+                    Unlike traditional financial analyses, such as P&L or balance sheets, which show what happened in the past, the SVF detects structural errors before they impact the income statement.
+                </p>
+                <p>
+                    SVF is a highly accurate assessment tool for internal use by a company (which has all the exact data) and also provides valuable information even when using public data, inferred data, or approximations.
+                </p>
+            </section>
+        </div>
+        
+        <div class="content-card">
+            <section id="objectives">
+                <h2>2. Objectives</h2>
+                <p>
+                    SVF contextualizes current results over time. The main objective, and what makes it unique, is to create a matrix with moving, rather than static, elements. Its objectives are:
+                </p>
+                <ul>
+                    <li><strong>Diagnosis:</strong> With a predictive component for detecting declines in core stability before they lead to lower sales or profits (identification of “collapsed castles”).</li>
+                    <li><strong>Capital optimization:</strong> Guide investment (CapEx) toward areas that strengthen the company's role in its network or improve its adaptability. In other words, make better decisions to direct investment toward innovation or consolidation, depending on the needs of each case.</li>
+                    <li><strong>Minimizing ballast:</strong> Recognizing the burden of legacy systems and methods to encourage the decision to sell or technologically upgrade them.</li>
+                    <li><strong>Strategic alignment:</strong> Establishing an useful framework understandable for CEOs, CFOs (who manages WACC and CapEx), and CTOs/COOs (who manage technical debt, flexibility, and key positions).</li>
+                </ul>
+            </section>
+        </div>
+
+        <div class="content-card">
+            <section id="dimensions">
+                <h2>3. Dimensions</h2>
+                
+                <div class="svf-grid">
+                    <div>
+                        <h3>X-axis = Inertia-adjusted velocity (IAV) A.K.A. Velocity</h3>
+                        <p><small>Objective: Measure the speed at which capital is transferred to high-growth areas in contrast to the costs of maintaining traditional operations.</small></p>
+                        <ul>
+                            <li><strong>Relative Resource Agility (RRA):</strong> The degree of change in capital expenditure year-over-year (YoY) between different verticals or business units.</li>
+                            <li><strong>Innovation Yield Ratio (IYR):</strong> The proportion of revenue from new products or services (introduced in the last 36 months) relative to R&D expenditure.</li>
+                            <li><strong>Legacy burden (LB):</strong> The ratio of non-growth-related expenses to investments in expansion or innovation initiatives.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Y-axis = Dependency-weighted centrality (DWC) A.K.A. Power</h3>
+                        <p><small>Objective: To assess how critical the company is in its value chain and how difficult it is for others to replace it.</small></p>
+                        <ul>
+                            <li><strong>Ecosystem stickiness index (ESI):</strong> An indicator of the sensitivity of customer loss to price adjustments in connected systems.</li>
+                            <li><strong>Node criticality:</strong> The portion of the sector's activities or processes that depend on the company's unique patents, interfaces, or configurations.</li>
+                            <li><strong>Substitution friction (SF):</strong> Defines the difficulty or obstacles, both practical and financial, that deter customers from leaving the brand and contracting other alternatives.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="content-card">
+            <section id="math">
+                <h2>4. Mathematical approach</h2>
+                <p>The aim is for good performance in one specific area to overshadow weaknesses in others. The SVF uses a geometric mean for this purpose. If there is a significant problem in Speed or Power, the viability score decreases significantly.</p>
+                
+                <div class="formula-box">
+                    <strong>The synergy factor (SF):</strong><br>
+                    <span style="font-size: 1.5em;">SF = √(IAV · DWC)</span>
+                </div>
+
+                <p>The Displacement Vector is the key metric for forecasting the future viability of each company. Later on, we consider the implications of using the displacement vector as a predictive element. It measures how dynamic the company is in the face of risks.</p>
+                
+                <div class="formula-box">
+                    <strong>The displacement vector (V&#8407;):</strong><br>
+                    <span style="font-size: 1.5em;">V&#8407; = ΔSF / (WACC + Sector volatility)</span>
+                </div>
+                
+                <p>
+                    <span class="badge" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">V&#8407; > 0</span> <strong>Structural resilience:</strong> The company is creating competitive advantages faster than market disruptions or capital costs can erode them.<br>
+                    <br>
+                    <span class="badge" style="background: #fef2f2; color: #991b1b; border-color: #fecaca;">V&#8407; < 0</span> <strong>Structural atrophy:</strong> The company's position is weakening, pointing to upcoming declines in performance. Even in financially strong positions (EBITDA).
+                </p>
+            </section>
+        </div>
+
+        <div class="content-card">
+            <section id="matrix">
+                <h2>5. Strategic positioning matrix</h2>
+                <table class="svf-table">
+                    <thead>
+                        <tr>
+                            <th>Ranking</th>
+                            <th>Speed (IAV)</th>
+                            <th>Power (DWC)</th>
+                            <th>Diagnostic Assessment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dynamic Monopolies</strong></td>
+                            <td>High</td>
+                            <td>High</td>
+                            <td><strong>Leading Point.</strong> Combines rapid investment redirections with strong defenses against replacements.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Agile Competitors</strong></td>
+                            <td>High</td>
+                            <td>Low</td>
+                            <td><strong>Excellence in Execution.</strong> Solid processes, but without robust protections. Risk of profit reduction.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Operators</strong></td>
+                            <td>Low</td>
+                            <td>High</td>
+                            <td><strong>Weakened Advantage.</strong> Resisted by established centrality, but without sufficient investment in new areas of growth.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Low-Performance Entities</strong></td>
+                            <td>Low</td>
+                            <td>Low</td>
+                            <td><strong>Declining Phase.</strong> Misuse of capital and easy to replace. Could be on the way to liquidation.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <div class="content-card">
+            <section id="weaknesses">
+                <h2>6. Weaknesses of the SVF</h2>
+                
+                <h3>The principle of reflexivity (feedback loop)</h3>
+                <p>This is one of the weaknesses identified in using SVF as a predictive tool. Although the purpose is to anticipate the direction of a company regardless of its current position and size, the reality is that it also functions as a self-influencing mechanism. The results obtained from applying the framework can alter the approaches of the companies evaluated.</p>
+                <p>From another perspective, this principle of reflexivity exchanges the predictive capacity of the model for its guiding capacity:</p>
+                <ul>
+                    <li><strong>Corrective measures:</strong> Identifying the positioning of the “market leader” in advance allows companies to get rid of obsolete resources before accumulated technological problems become a drag that drags everything down.</li>
+                    <li><strong>Risk mitigation:</strong> It uncovers structural problems that do not appear in fiscal reports but are already anticipating those to come.</li>
+                    <li><strong>Investment direction:</strong> The displacement vector provides a forward-looking signal for the distribution of financing and for building stakeholder confidence.</li>
+                </ul>
+
+                <h3>Data acquisition levels</h3>
+                <p>This is a relative limitation. To calculate the synergy factor and displacement vector with maximum accuracy, internal data would be required, which makes a fully accurate external analysis difficult. However, the use of external data does not invalidate the results due to the weighting of multiple parameters.</p>
+                
+                <table class="svf-table">
+                     <thead>
+                        <tr>
+                            <th>Data Level</th>
+                            <th>Information Sources</th>
+                            <th>Analytical Complexity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Level 1 (External)</td>
+                            <td>Official filings (such as 10-K and 8-K forms), market position statistics, and accounting records.</td>
+                            <td>Low</td>
+                        </tr>
+                        <tr>
+                            <td>Level 2 (proxy)</td>
+                            <td>Personnel transitions (via LinkedIn), public code submissions (via GitHub), and general market sentiment.</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td>Level 3 (internal)</td>
+                            <td>Enterprise resource planning (ERP) system information, unit financial statements, and internal adjustment rates.</td>
+                            <td>High</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Sector bias (cross-sector benchmarking)</h3>
+                <p>The velocity (IAV) of a software company is not comparable to that of a heavy manufacturing company. The framework requires clearly established industry standards to avoid mislabeling inherently gradual sectors as “zombies.” For more relevant results, it is not as important to match companies by size, but rather to classify them accurately within their industry.</p>
+                <p>For the same reason, it also yields better results when comparing companies with similar structures (e.g., holding company vs. holding company).</p>
+            </section>
+        </div>
+        
+        <div class="content-card">
+            <section id="svm">
+                <h2>The Seneka Viability Matrix</h2>
+                <p>To ensure that the mere calculation of DWC and IAV becomes a visual and illustrative element of both a particular company and a specific industry or sector (defined by the positions of a given set of players), the SVF is represented graphically by the SVM (Seneka Viability Matrix).</p>
+                <p>The matrix divides the space into four perfectly delimited quadrants, without attempting to simplify the reality of each company and define it categorically. However, for practical purposes and as an analysis tool, it strengthens the hard data.</p>
+                
+                <p>The matrix is represented as follows:</p>
+                
+                <!-- Standard Matrix Visual -->
+                <div class="matrix-container">
+                    <div class="matrix-y-axis">
+                        <div class="matrix-y-label">Dependency-weighted centrality (DWC)</div>
+                    </div>
+                    
+                    <div class="matrix-main">
+                         <div style="display: flex; flex-direction: row; width: 100%; max-width: 650px;">
+                            <div class="axis-indicators-y">
+                                <span>High</span>
+                                <span>Low</span>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div class="matrix-grid-box">
+                                    <!-- Top Left: Low Speed, High Power -->
+                                    <div class="matrix-quadrant q-tl">
+                                        <div class="q-title">Current Operators</div>
+                                        <div class="q-sub">Weakened Advantage</div>
+                                    </div>
+                                    <!-- Top Right: High Speed, High Power -->
+                                    <div class="matrix-quadrant q-tr">
+                                        <div class="q-title">Dynamic Monopolies</div>
+                                        <div class="q-sub">Leading Point</div>
+                                    </div>
+                                    <!-- Bottom Left: Low Speed, Low Power -->
+                                    <div class="matrix-quadrant q-bl">
+                                        <div class="q-title">Low-Performance Entities</div>
+                                        <div class="q-sub">Declining Phase</div>
+                                    </div>
+                                    <!-- Bottom Right: High Speed, Low Power -->
+                                    <div class="matrix-quadrant q-br">
+                                        <div class="q-title">Agile Competitors</div>
+                                        <div class="q-sub">Excellence in Execution</div>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                        
+                        <div class="matrix-x-axis">
+                            <div class="axis-indicators-x" style="max-width: 650px; padding-left: 20px;">
+                                <span>Low</span>
+                                <span>High</span>
+                            </div>
+                            <div class="matrix-x-label">Inertia-adjusted velocity (IAV)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>With the possibility of “labeling” it metaphorically. This makes it easier to explore, intuitive to use as a tool for strategic ideas, and easy to comment on. For this, we establish the following equivalencies:</p>
+               
+                <!-- Animal Matrix Visual (Adapted) -->
+                <div class="matrix-container">
+                    <div class="matrix-y-axis">
+                        <div class="matrix-y-label">Power (DWC)</div>
+                    </div>
+                    
+                    <div class="matrix-main">
+                         <div style="display: flex; flex-direction: row; width: 100%; max-width: 650px;">
+                            <div class="axis-indicators-y">
+                                <span>High</span>
+                                <span>Low</span>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div class="matrix-grid-box">
+                                    <!-- Top Left: Turtle (Protected Incumbent) -->
+                                    <div class="matrix-quadrant q-tl">
+                                        <span class="animal-icon">🐢</span>
+                                        <span class="animal-name">Turtle</span>
+                                        <div class="q-sub">Protected Incumbent</div>
+                                        <p class="animal-desc">Powerful but slow<br><em>No great risk, but no great potential either</em></p>
+                                    </div>
+                                    <!-- Top Right: Lion (Apex) -->
+                                    <div class="matrix-quadrant q-tr">
+                                        <span class="animal-icon">🦁</span>
+                                        <span class="animal-name">Lion</span>
+                                        <div class="q-sub">Apex</div>
+                                        <p class="animal-desc">Fast and dominant; shapes the market<br><em>The real risk may be arrogance</em></p>
+                                    </div>
+                                    <!-- Bottom Left: Dodo (Non-Viable) -->
+                                    <div class="matrix-quadrant q-bl">
+                                        <span class="animal-icon">☠️</span>
+                                        <span class="animal-name">Dodo</span>
+                                        <div class="q-sub">Non-Viable</div>
+                                        <p class="animal-desc">Neither fast nor essential<br><em>Risk of extinction</em></p>
+                                    </div>
+                                    <!-- Bottom Right: Squirrel (Fast but Fragile) -->
+                                    <div class="matrix-quadrant q-br">
+                                        <span class="animal-icon">🐿️</span>
+                                        <span class="animal-name">Squirrel</span>
+                                        <div class="q-sub">Fast but Fragile</div>
+                                        <p class="animal-desc">Agile but replaceable<br><em>The main risk is competition</em></p>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                        
+                        <div class="matrix-x-axis">
+                            <div class="axis-indicators-x" style="max-width: 650px; padding-left: 20px;">
+                                <span>Low</span>
+                                <span>High</span>
+                            </div>
+                            <div class="matrix-x-label">Speed (IAV)</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p class="footer-signature">© Seneka R Warren</p>
+            <nav class="footer-social-nav" aria-label="Social Media Profiles">
+                <a href="https://github.com/Senekame/" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile">
+                    <img src="img/github.svg" alt="GitHub" class="social-icon">
+                </a>
+                <a href="https://www.linkedin.com/in/seneka/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile">
+                    <img src="img/linkedin.svg" alt="LinkedIn" class="social-icon">
+                </a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

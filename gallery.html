@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gallery - Seneka R Warren</title>
+
+<meta name="description" content="Photo gallery of Seneka R Warren.">
+
+<link rel="canonical" href="https://seneka.me/gallery.html">
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="icon" href="img/favicon.png" type="image/png">
+</head>
+
+<body>
+    <div class="animated-background"></div>
+
+    <main class="container">
+        <header>
+            <img src="img/seneka.png" alt="Seneka R Warren - Personal Logo" class="logo">
+            <h1>I'm Seneka R Warren</h1>
+            <nav class="main-nav">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="gallery.html" class="active">Gallery</a></li>
+                <li><a href="svf.html">SVF</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+        </header>
+
+        <section class="gallery" aria-labelledby="gallery-title">
+            <h2 id="gallery-title">Gallery</h2>
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Images will be loaded dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p class="footer-signature">© Seneka R Warren</p>
+            <nav class="footer-social-nav" aria-label="Social Media Profiles">
+                <a href="https://github.com/Senekame/" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile">
+                    <img src="img/github.svg" alt="GitHub" class="social-icon">
+                </a>
+                <a href="https://www.linkedin.com/in/seneka/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile">
+                    <img src="img/linkedin.svg" alt="LinkedIn" class="social-icon">
+                </a>
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryGrid = document.getElementById('gallery-grid');
+            const galleryPath = 'img/gallery/';
+
+            // Function to create gallery item
+            const createGalleryItem = (filename, index) => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                
+                // Add staggered animation delay
+                item.style.animationDelay = `${index * 0.1}s`;
+                
+                const img = document.createElement('img');
+                img.src = `${galleryPath}${filename}`;
+                
+                // Decode filename to handle spaces and special chars
+                let decodedName = decodeURIComponent(filename);
+                // Remove extension (handle cases with multiple dots correctly)
+                const lastDotIndex = decodedName.lastIndexOf('.');
+                if (lastDotIndex !== -1) {
+                    decodedName = decodedName.substring(0, lastDotIndex);
+                }
+                
+                // Replace underscores and hyphens with spaces, but keep other special chars
+                const captionText = decodedName.replace(/[_-]/g, ' '); 
+                
+                img.alt = captionText;
+                img.loading = 'lazy';
+                
+                // Create caption element
+                const caption = document.createElement('div');
+                caption.className = 'gallery-caption';
+                caption.textContent = captionText;
+                
+                item.appendChild(img);
+                item.appendChild(caption);
+                galleryGrid.appendChild(item);
+                
+                // Add mouse move effect
+                item.addEventListener('mousemove', e => {
+                    const rect = item.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    item.style.setProperty('--mouse-x', `${x}px`);
+                    item.style.setProperty('--mouse-y', `${y}px`);
+                });
+            };
+            
+            // Fetch directory listing
+            fetch(galleryPath)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary element to parse the HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a'));
+                    
+                    // Filter for image files
+                    const imageFiles = links
+                        .map(link => link.getAttribute('href'))
+                        .filter(href => href.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+                        .sort(); // Sort alphabetically
+                    
+                    if (imageFiles.length > 0) {
+                        imageFiles.forEach((filename, index) => {
+                            createGalleryItem(filename, index);
+                        });
+                    } else {
+                        // Fallback if directory listing is not enabled or empty
+                        console.warn('No images found or directory listing disabled.');
+                        galleryGrid.innerHTML = '<p style="text-align:center; width:100%;">Gallery is empty or cannot be loaded.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading gallery images:', error);
+                    galleryGrid.innerHTML = '<p style="text-align:center; width:100%;">Error loading gallery.</p>';
+                });
+        });
+    </script>
+</body>
+</html>
