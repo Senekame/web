@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knight's Tour Trainer - Seneka R Warren</title>
     <meta name="description"
-        content="An interactive Knight's Tour chess trainer. Place the knight, set two objectives, and complete the full 64-square Hamiltonian path.">
+        content="An interactive Knight's Tour chess trainer. Place the knight and complete the full 64-square Hamiltonian path.">
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="style.css">
 
@@ -19,11 +19,8 @@
             --knight-color: var(--primary-text, #282008);
             --visited-color: rgba(135, 150, 95, 0.4);
             --target1-color: #dcb35c;
-            /* More subtle chrome/amber */
             --target2-color: #7a9e9b;
-            /* More subtle sage/teal */
             --success-color: #8fa87a;
-            /* Muted olive success */
         }
 
         /* ── Page-level layout ────────────────────────────────── */
@@ -76,6 +73,7 @@
             gap: 0.75rem;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         .controls button {
@@ -128,6 +126,95 @@
             background-color: #dc2626;
             color: #fff;
             border-color: #dc2626;
+        }
+
+        /* ── Toggle switch ────────────────────────────────────── */
+        .toggle-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0.25rem;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--secondary-text, #786c55);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .toggle-group input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-track {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background-color: var(--border-color, #ddd);
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-group input:checked+.toggle-track {
+            background-color: var(--success-color, #8fa87a);
+        }
+
+        .toggle-group input:checked+.toggle-track::after {
+            transform: translateX(16px);
+        }
+
+        /* ── Difficulty selector ──────────────────────────────── */
+        .difficulty-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--secondary-text, #786c55);
+        }
+
+        .difficulty-group select {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border-color, #F3F1E9);
+            background-color: var(--surface-b, #FFFFFF);
+            color: var(--primary-text, #282008);
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .difficulty-group select:focus {
+            border-color: var(--knight-color);
+        }
+
+        .separator {
+            width: 1px;
+            height: 20px;
+            background-color: var(--border-color, #F3F1E9);
+            margin: 0 0.25rem;
         }
 
         /* ── Board wrapper + coordinates ──────────────────────── */
@@ -332,6 +419,24 @@
                 <button id="resetBtn" class="btn-danger" onclick="resetGame()">Reset</button>
             </div>
 
+            <div class="toggle-row">
+                <label class="toggle-group" id="showVisitedToggle">
+                    <input type="checkbox" id="showVisitedCheckbox" checked>
+                    <span class="toggle-track"></span>
+                    <span>Show visited</span>
+                </label>
+
+                <span class="separator"></span>
+
+                <div class="difficulty-group">
+                    <span>Mode:</span>
+                    <select id="difficultySelect">
+                        <option value="normal" selected>Normal</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="board-wrapper">
                 <div></div>
                 <div class="coord-row coord">
@@ -354,7 +459,7 @@
             </div>
 
             <div class="instructions" id="instructions">
-                Phase 1: Place the <b>Knight</b>.
+                Place the <b>Knight</b> on any square.
             </div>
 
             <div id="pathHistory"
@@ -380,29 +485,53 @@
     </footer>
 
     <script>
-        const tour = [
-            0, 10, 20, 3, 9, 24, 34, 49, 59, 44, 38, 28, 11, 5, 15, 30,
-            36, 19, 25, 35, 29, 12, 27, 37, 52, 42, 32, 26, 43, 60, 54, 39,
-            22, 7, 13, 23, 6, 21, 4, 14, 31, 46, 63, 53, 47, 62, 45, 55,
-            61, 51, 57, 40, 50, 56, 41, 58, 48, 33, 16, 1, 18, 8, 2, 17
+        /* ── Valid knight moves from any index ─────────────────── */
+        const KNIGHT_DELTAS = [
+            [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+            [1, -2], [1, 2], [2, -1], [2, 1]
         ];
 
+        function getKnightMoves(index) {
+            const row = Math.floor(index / 8);
+            const col = index % 8;
+            const moves = [];
+            for (const [dr, dc] of KNIGHT_DELTAS) {
+                const nr = row + dr, nc = col + dc;
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                    moves.push(nr * 8 + nc);
+                }
+            }
+            return moves;
+        }
+
+        /* ── DOM refs ─────────────────────────────────────────── */
         const boardEl = document.getElementById('board');
         const instructionsEl = document.getElementById('instructions');
         const statsEl = document.getElementById('stats');
         const undoBtn = document.getElementById('undoBtn');
         const pathHistoryEl = document.getElementById('pathHistory');
+        const showVisitedCheckbox = document.getElementById('showVisitedCheckbox');
+        const difficultySelect = document.getElementById('difficultySelect');
         const tiles = [];
 
-        let gameState = 'SET_START';
+        /* ── Game state ───────────────────────────────────────── */
+        let gameState = 'SET_START';   // SET_START | SET_T1 | SET_T2 | PLAYING | WON
+        let difficulty = 'normal';      // normal | hard
         let target1 = null;
         let target2 = null;
         let path = [];
-        let currentTourIndex = null;
-        let direction = 1;
         let reachedT1 = false;
         let reachedT2 = false;
 
+        /* ── Event listeners for toggles ──────────────────────── */
+        showVisitedCheckbox.addEventListener('change', () => updateUI());
+
+        difficultySelect.addEventListener('change', () => {
+            difficulty = difficultySelect.value;
+            resetGame();
+        });
+
+        /* ── Board creation ───────────────────────────────────── */
         function createBoard() {
             for (let i = 0; i < 64; i++) {
                 const tile = document.createElement('div');
@@ -416,18 +545,20 @@
             }
         }
 
+        /* ── Coordinate helper ────────────────────────────────── */
         function indexToCoord(index) {
             const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
             const rows = ['8', '7', '6', '5', '4', '3', '2', '1'];
             return cols[index % 8] + rows[Math.floor(index / 8)];
         }
 
+        /* ── Click handler ────────────────────────────────────── */
         function handleTileClick(index) {
             if (gameState === 'WON') return;
 
             switch (gameState) {
                 case 'SET_START':
-                    setStart(index);
+                    placeKnight(index);
                     break;
                 case 'SET_T1':
                     if (index !== path[0]) {
@@ -438,7 +569,7 @@
                 case 'SET_T2':
                     if (index !== path[0] && index !== target1) {
                         target2 = index;
-                        finishSetup();
+                        gameState = 'PLAYING';
                     }
                     break;
                 case 'PLAYING':
@@ -448,72 +579,75 @@
             updateUI();
         }
 
-        function setStart(index) {
+        /* ── Place knight (start) ─────────────────────────────── */
+        function placeKnight(index) {
             path = [index];
-            currentTourIndex = tour.indexOf(index);
-            gameState = 'SET_T1';
-        }
-
-        function finishSetup() {
-            calculateDirection();
-            gameState = 'PLAYING';
-        }
-
-        function moveKnight(index) {
-            const expectedTourIndex = (currentTourIndex + direction + 64) % 64;
-            const expectedTileIndex = tour[expectedTourIndex];
-
-            if (index === expectedTileIndex) {
-                path.push(index);
-                currentTourIndex = expectedTourIndex;
-                checkObjectives(index);
-                showFeedback(index, 'correct');
-                if (path.length === 64) gameState = 'WON';
+            if (difficulty === 'normal') {
+                gameState = 'PLAYING';
             } else {
-                showFeedback(index, 'error');
+                gameState = 'SET_T1';
             }
         }
 
+        /* ── Free movement — only validates knight L-shape and not already visited ── */
+        function moveKnight(index) {
+            const current = path[path.length - 1];
+            const validMoves = getKnightMoves(current);
+
+            if (!validMoves.includes(index)) {
+                showFeedback(index, 'error');
+                return;
+            }
+
+            if (path.includes(index)) {
+                showFeedback(index, 'error');
+                return;
+            }
+
+            path.push(index);
+            checkObjectives(index);
+            showFeedback(index, 'correct');
+
+            if (path.length === 64) {
+                gameState = 'WON';
+            }
+        }
+
+        /* ── Randomize ────────────────────────────────────────── */
         function randomizeGame() {
             resetGame();
             const startIdx = Math.floor(Math.random() * 64);
-            setStart(startIdx);
+            placeKnight(startIdx);
 
-            let t1, t2;
-            do { t1 = Math.floor(Math.random() * 64); } while (t1 === startIdx);
-            target1 = t1;
+            if (difficulty === 'hard') {
+                let t1, t2;
+                do { t1 = Math.floor(Math.random() * 64); } while (t1 === startIdx);
+                target1 = t1;
+                do { t2 = Math.floor(Math.random() * 64); } while (t2 === startIdx || t2 === t1);
+                target2 = t2;
+                gameState = 'PLAYING';
+            }
 
-            do { t2 = Math.floor(Math.random() * 64); } while (t2 === startIdx || t2 === t1);
-            target2 = t2;
-
-            finishSetup();
             updateUI();
         }
 
-        function calculateDirection() {
-            const startIdx = tour.indexOf(path[0]);
-            const t1Idx = tour.indexOf(target1);
-            const t2Idx = tour.indexOf(target2);
-            const distT1 = (t1Idx - startIdx + 64) % 64;
-            const distT2 = (t2Idx - startIdx + 64) % 64;
-            direction = (distT1 < distT2) ? 1 : -1;
-        }
-
+        /* ── Objectives ───────────────────────────────────────── */
         function checkObjectives(currentIndex) {
-            if (!reachedT1 && currentIndex === target1) reachedT1 = true;
-            if (!reachedT2 && currentIndex === target2) reachedT2 = true;
+            if (target1 !== null && !reachedT1 && currentIndex === target1) reachedT1 = true;
+            if (target2 !== null && !reachedT2 && currentIndex === target2) reachedT2 = true;
         }
 
+        /* ── Visual feedback ──────────────────────────────────── */
         function showFeedback(index, type) {
             const tile = tiles[index];
             tile.classList.add(type);
             setTimeout(() => tile.classList.remove(type), 400);
         }
 
+        /* ── Undo ─────────────────────────────────────────────── */
         function undo() {
             if (path.length > 1) {
                 const removed = path.pop();
-                currentTourIndex = tour.indexOf(path[path.length - 1]);
                 if (removed === target1) reachedT1 = false;
                 if (removed === target2) reachedT2 = false;
                 if (gameState === 'WON') gameState = 'PLAYING';
@@ -521,15 +655,19 @@
             }
         }
 
+        /* ── Reset ────────────────────────────────────────────── */
         function resetGame() {
             gameState = 'SET_START';
             target1 = null; target2 = null;
-            path = []; currentTourIndex = null;
+            path = [];
             reachedT1 = false; reachedT2 = false;
             updateUI();
         }
 
+        /* ── Render ───────────────────────────────────────────── */
         function updateUI() {
+            const showVisited = showVisitedCheckbox.checked;
+
             tiles.forEach((tile, index) => {
                 tile.className = 'tile';
                 const row = Math.floor(index / 8);
@@ -538,18 +676,23 @@
                 tile.innerHTML = '';
             });
 
-            path.forEach((step, i) => {
-                if (i < path.length - 1) {
-                    tiles[step].classList.add('visited');
-                    const span = document.createElement('span');
-                    span.className = 'step-number';
-                    span.innerText = i + 1;
-                    tiles[step].appendChild(span);
-                }
-            });
+            if (showVisited) {
+                path.forEach((step, i) => {
+                    if (i < path.length - 1) {
+                        tiles[step].classList.add('visited');
+                        const span = document.createElement('span');
+                        span.className = 'step-number';
+                        span.innerText = i + 1;
+                        tiles[step].appendChild(span);
+                    }
+                });
+            }
 
-            if (target1 !== null && !reachedT1) tiles[target1].classList.add('target1');
-            if (target2 !== null && !reachedT2) tiles[target2].classList.add('target2');
+            // Targets (only in hard mode)
+            if (difficulty === 'hard') {
+                if (target1 !== null && !reachedT1) tiles[target1].classList.add('target1');
+                if (target2 !== null && !reachedT2) tiles[target2].classList.add('target2');
+            }
 
             if (path.length > 0) {
                 const currentPos = path[path.length - 1];
@@ -558,37 +701,57 @@
 
             statsEl.innerText = `Progress: ${path.length} / 64`;
 
+            undoBtn.disabled = path.length <= 1 || gameState === 'SET_START';
+
             // Remove win glow if not won
             instructionsEl.classList.remove('win-glow');
 
             pathHistoryEl.innerText = path.map(indexToCoord).join(', ');
 
-            switch (gameState) {
-                case 'SET_START':
-                    instructionsEl.innerHTML = "Phase 1: Place the <b>Knight</b>.";
-                    instructionsEl.style.borderBottomColor = "var(--knight-color)";
-                    undoBtn.disabled = true;
-                    break;
-                case 'SET_T1':
-                    instructionsEl.innerHTML = "Phase 2: Set <b style='color: var(--target1-color)'>Objective 1</b>.";
-                    instructionsEl.style.borderBottomColor = "var(--target1-color)";
-                    break;
-                case 'SET_T2':
-                    instructionsEl.innerHTML = "Phase 3: Set <b style='color: var(--target2-color)'>Objective 2</b>.";
-                    instructionsEl.style.borderBottomColor = "var(--target2-color)";
-                    break;
-                case 'PLAYING':
-                    undoBtn.disabled = false;
-                    instructionsEl.style.borderBottomColor = "var(--success-color)";
-                    if (!reachedT1) instructionsEl.innerHTML = "Step 1: Reach <b style='color: var(--target1-color)'>Square 1</b>.";
-                    else if (!reachedT2) instructionsEl.innerHTML = "Step 2: Reach <b style='color: var(--target2-color)'>Square 2</b>.";
-                    else instructionsEl.innerHTML = "Final Phase! Complete all <b>64 squares</b>.";
-                    break;
-                case 'WON':
-                    instructionsEl.innerHTML = "🏆 <b style='color: var(--accent-dark)'>BRILLIANT!</b> You've completed the entire board.";
-                    instructionsEl.style.borderBottomColor = "var(--glow-primary)";
-                    instructionsEl.classList.add('win-glow');
-                    break;
+            // Instructions
+            if (difficulty === 'normal') {
+                switch (gameState) {
+                    case 'SET_START':
+                        instructionsEl.innerHTML = "Place the <b>Knight</b> on any square.";
+                        instructionsEl.style.borderBottomColor = "var(--knight-color)";
+                        break;
+                    case 'PLAYING':
+                        instructionsEl.innerHTML = "Move freely. Complete all <b>64 squares</b>.";
+                        instructionsEl.style.borderBottomColor = "var(--success-color)";
+                        break;
+                    case 'WON':
+                        instructionsEl.innerHTML = "🏆 <b style='color: var(--accent-dark)'>BRILLIANT!</b> You've completed the entire board.";
+                        instructionsEl.style.borderBottomColor = "var(--glow-primary)";
+                        instructionsEl.classList.add('win-glow');
+                        break;
+                }
+            } else {
+                // Hard mode
+                switch (gameState) {
+                    case 'SET_START':
+                        instructionsEl.innerHTML = "Place the <b>Knight</b> on any square.";
+                        instructionsEl.style.borderBottomColor = "var(--knight-color)";
+                        break;
+                    case 'SET_T1':
+                        instructionsEl.innerHTML = "Set <b style='color: var(--target1-color)'>Objective 1</b>.";
+                        instructionsEl.style.borderBottomColor = "var(--target1-color)";
+                        break;
+                    case 'SET_T2':
+                        instructionsEl.innerHTML = "Set <b style='color: var(--target2-color)'>Objective 2</b>.";
+                        instructionsEl.style.borderBottomColor = "var(--target2-color)";
+                        break;
+                    case 'PLAYING':
+                        instructionsEl.style.borderBottomColor = "var(--success-color)";
+                        if (!reachedT1) instructionsEl.innerHTML = "Step 1: Reach <b style='color: var(--target1-color)'>Square 1</b>.";
+                        else if (!reachedT2) instructionsEl.innerHTML = "Step 2: Reach <b style='color: var(--target2-color)'>Square 2</b>.";
+                        else instructionsEl.innerHTML = "Final Phase! Complete all <b>64 squares</b>.";
+                        break;
+                    case 'WON':
+                        instructionsEl.innerHTML = "🏆 <b style='color: var(--accent-dark)'>BRILLIANT!</b> You've completed the entire board.";
+                        instructionsEl.style.borderBottomColor = "var(--glow-primary)";
+                        instructionsEl.classList.add('win-glow');
+                        break;
+                }
             }
         }
 
